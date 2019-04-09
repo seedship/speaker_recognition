@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include "ece420_lib.h"
+#include <opencv/ml.h>
 
 // https://en.wikipedia.org/wiki/Hann_function
 float getHanningCoef(int N, int idx)
@@ -21,7 +22,6 @@ int findMaxArrayIdx(float *array, int minIdx, int maxIdx)
 			ret_idx = i;
 		}
 	}
-
 	return ret_idx;
 }
 
@@ -116,5 +116,5 @@ bool isVoiced(kiss_fft_cpx *data, unsigned length, unsigned threshold)
 		total += data->r * data->r + data->i * data->i;
 	}
 
-	return total > threshold
+	return total > threshold;
 }
