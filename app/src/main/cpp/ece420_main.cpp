@@ -24,8 +24,6 @@ float lastFreqDetected = -1;
 kiss_fft_cpx in[FRAME_SIZE];
 kiss_fft_cpx out[FRAME_SIZE];
 
-float output[FRAME_SIZE];
-
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
     struct timeval start;
@@ -54,6 +52,8 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 
     free(fft_cfg);
+
+    lastFreqDetected = setLastFreqDetected();
 
     gettimeofday(&end, NULL);
     LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));

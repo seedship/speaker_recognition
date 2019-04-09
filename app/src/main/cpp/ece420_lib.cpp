@@ -5,7 +5,8 @@
 
 #include <cmath>
 #include "ece420_lib.h"
-#include <opencv/ml.h>
+#include <opencv2/ml/ml.hpp>
+//#include <opencv/ml.h>
 
 // https://en.wikipedia.org/wiki/Hann_function
 float getHanningCoef(int N, int idx)
@@ -117,4 +118,20 @@ bool isVoiced(kiss_fft_cpx *data, unsigned length, unsigned threshold)
 	}
 
 	return total > threshold;
+}
+
+float setLastFreqDetected(){
+    cv::Ptr<cv::ml::KNearest> knn = cv::ml::KNearest::create();
+    knn->setDefaultK(1);
+    knn->setIsClassifier(1);
+    cv::Mat_<float> trainFeatures(2, 1);
+    trainFeatures << 1, 2;
+
+    cv::Mat_<int> trainlabels(1,2);
+    trainlabels << 1, 2;
+    knn->train(trainFeatures, cv::ml::ROW_SAMPLE, trainlabels);
+
+    cv::Mat_<float> testFeature(1,1);
+    testFeature << 1.6;
+    return knn->findNearest(testFeature, 1, cv::noArray());
 }

@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include <vector>
-#include <kiss_fft.h>
+#include "kiss_fft/kiss_fft.h"
 
 float getHanningCoef(int N, int idx);
 int findMaxArrayIdx(float *array, int minIdx, int maxIdx);
@@ -27,5 +27,7 @@ std::vector<float> generateMelPoints(unsigned num_filters, unsigned nfft, unsign
 std::vector<unsigned> generateBinPoints(const std::vector<float> &mel_points, unsigned nfft, unsigned fs);
 
 short calculate_MFCC_frame(unsigned fs, kiss_fft_cpx *data, unsigned length, const std::vector<std::vector<float>>& fbank);
+
+float setLastFreqDetected();
 
 #endif //ECE420_LIB_H
