@@ -54,7 +54,7 @@ public class MainActivity extends Activity
     Boolean isPlaying = false;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
-    private static final int FRAME_SIZE = 256;
+    private static final int FRAME_SIZE = 1024;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +72,8 @@ public class MainActivity extends Activity
         if (supportRecording) {
             createSLEngine(Integer.parseInt(nativeSampleRate), FRAME_SIZE);
         }
+
+        init();
 
         // Setup UI
         freq_view = (TextView)findViewById(R.id.textFrequency);
@@ -255,8 +257,8 @@ public class MainActivity extends Activity
         }
 
         protected void onProgressUpdate(Float... newFreq) {
-            if (newFreq[0] > 0) {
-                freq_view.setText(Long.toString(newFreq[0].longValue()) + " Hz");
+            if (newFreq[0] >= 0) {
+                freq_view.setText("Speaker #" + Long.toString(newFreq[0].longValue()));
             } else {
                 freq_view.setText("Unvoiced");
             }
@@ -285,4 +287,6 @@ public class MainActivity extends Activity
     public static native void stopPlay();
 
     public static native float getFreqUpdate();
+
+    public static native void init();
 }

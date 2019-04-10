@@ -26,7 +26,10 @@ add_library(echo SHARED
         debug_utils.cpp
         kiss_fft/kiss_fft.c
         ece420_lib.cpp
-        ece420_main.cpp)
+        ece420_main.cpp
+        FftRealPair.cpp
+        FastDctFft.cpp
+        )
 
 
 add_library(lib_opencv SHARED IMPORTED)

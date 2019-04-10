@@ -8,26 +8,37 @@
 
 #include <math.h>
 #include <vector>
+
 #include "kiss_fft/kiss_fft.h"
 
-float getHanningCoef(int N, int idx);
-int findMaxArrayIdx(float *array, int minIdx, int maxIdx);
-int findClosestIdxInArray(float *array, float value, int minIdx, int maxIdx);
-int findClosestInVector(std::vector<int> vector, float value, int minIdx, int maxIdx);
+double getHanningCoef(int N, int idx);
+int findMaxArrayIdx(double *array, int minIdx, int maxIdx);
+int findClosestIdxInArray(double *array, double value, int minIdx, int maxIdx);
+int findClosestInVector(std::vector<int> vector, double value, int minIdx, int maxIdx);
 
-float HzToMel(float freq);
-float MelToHz(float mel);
+double HzToMel(double freq);
+double MelToHz(double mel);
 
-bool isVoiced(kiss_fft_cpx *data, unsigned length, unsigned threshold);
+double calculateEnergySquared(const kiss_fft_cpx *data_squared, unsigned length);
 
-std::vector<std::vector<float>> filter_bank(unsigned num_filters, unsigned nfft, const std::vector<unsigned> & bin_points);
+bool isVoiced(const kiss_fft_cpx *data_squared, unsigned length, double threshold);
 
-std::vector<float> generateMelPoints(unsigned num_filters, unsigned nfft, unsigned fs);
+std::vector<std::vector<double>> filter_bank(unsigned num_filters, unsigned nfft, const std::vector<unsigned> & bin_points);
 
-std::vector<unsigned> generateBinPoints(const std::vector<float> &mel_points, unsigned nfft, unsigned fs);
+std::vector<double> generateMelPoints(unsigned num_filters, unsigned nfft, unsigned fs);
 
-short calculate_MFCC_frame(unsigned fs, kiss_fft_cpx *data, unsigned length, const std::vector<std::vector<float>>& fbank);
+std::vector<unsigned> generateBinPoints(const std::vector<double> &mel_points, unsigned nfft, unsigned fs);
 
-float setLastFreqDetected();
+short calculate_MFCC_frame(unsigned fs, const kiss_fft_cpx *data, unsigned length, const std::vector<std::vector<double>>& fbank);
+
+std::vector<double> sampleToMFCC(const std::vector<double> &inputData, const std::vector<std::vector<double> > &fbank);
+
+std::vector<float> sampleToMFCC(kiss_fft_cpx *data, const std::vector<std::vector<double> > &fbank, unsigned nfft);
+
+std::vector<double> naiveDCT(const std::vector<double> &input);
+
+std::vector<float> naiveDCT(const std::vector<float> &input);
+
+double setLastFreqDetected();
 
 #endif //ECE420_LIB_H
