@@ -246,7 +246,7 @@ public class MainActivity extends Activity
     }
 
     // UI update
-    private class UpdateFreqTextTask extends AsyncTask<Void, Float, Void> {
+    private class UpdateFreqTextTask extends AsyncTask<Void, Integer, Void> {
         @Override
         protected Void doInBackground(Void... params) {
 
@@ -256,9 +256,9 @@ public class MainActivity extends Activity
             return null;
         }
 
-        protected void onProgressUpdate(Float... newFreq) {
+        protected void onProgressUpdate(Integer... newFreq) {
             if (newFreq[0] >= 0) {
-                freq_view.setText("Speaker #" + Long.toString(newFreq[0].longValue()));
+                freq_view.setText("Speaker #" + Integer.toString(newFreq[0].intValue()));
             } else {
                 freq_view.setText("Unvoiced");
             }
@@ -286,7 +286,7 @@ public class MainActivity extends Activity
     public static native void startPlay();
     public static native void stopPlay();
 
-    public static native float getFreqUpdate();
+    public static native int getFreqUpdate();
 
     public static native void init();
 }
