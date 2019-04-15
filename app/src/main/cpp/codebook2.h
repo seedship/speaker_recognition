@@ -4,6 +4,8 @@
 #define NUM_VECTORS 6560
 #define VECTOR_DIM 20
 
+#define NEXTSPEAKER 3
+
 static const int tags[NUM_VECTORS] = {
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

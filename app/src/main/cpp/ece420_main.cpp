@@ -59,6 +59,9 @@ std::vector<float> coeffs;
 
 std::vector<std::vector<double>> fbank;
 
+unsigned nextSpeaker;
+bool addingNewSpeaker;
+
 void ece420ProcessFrame(sample_buf *dataBuf) {
     // Keep in mind, we only have 20ms to process each buffer!
     struct timeval start;
@@ -128,14 +131,18 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
     LOGD("Received Call to Init");
     knn = cv::ml::KNearest::create();
     knn->setDefaultK(1);
-    knn->setIsClassifier(1);
+    knn->setIsClassifier(1b);
 
     for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
-        hist_buff[idx] = -1.0;
+        hist_buff[idx] = -1;
     }
     hist_idx = 0;
 
-    knn = generateInitialKNN();
+    labels = parseLabels();
+    coeffs = parseVectors();
+    updateKNN(labels, coeffs, knn);
+
+    nextSpeaker = NEXTSPEAKER;
 
     LOGD("Finished training classifier");
 
@@ -149,9 +156,17 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
 JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_startAdd(JNIEnv *env, jclass) {
     LOGD("Received call to startAdd");
+    addingNewSpeaker = 1b;
 }
 
 JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass) {
     LOGD("Received call to doneAdd");
+    nextSpeaker++;
+    addingNewSpeaker = 0b;
+    for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
+        hist_buff[idx] = -1;
+    }
+    hist_idx = 0;
+    updateKNN(labels, coeffs, knn);
 }
