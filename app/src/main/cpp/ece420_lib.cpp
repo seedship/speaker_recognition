@@ -7,6 +7,7 @@
 #include "ece420_lib.h"
 #include <opencv2/ml/ml.hpp>
 #include "NaiveDct.hpp"
+#include "codebook2.h"
 
 // https://en.wikipedia.org/wiki/Hann_function
 double getHanningCoef(int N, int idx)
@@ -275,4 +276,35 @@ std::vector<float> naiveDCT(const std::vector<float> &input)
         ans[k] = sum;
     }
     return ans;
+}
+
+std::vector<int> parseLabels()
+{
+	return std::vector<int>(&tags[0], &tags[NUM_VECTORS]);
+}
+
+std::vector<float> parseVectors()
+{
+	return std::vector<float>(&vectors[0], &vectors[NUM_VECTORS*VECTOR_DIM]);
+}
+
+cv::Ptr<cv::ml::KNearest> generateInitialKNN()
+{
+	auto knn = cv::ml::KNearest::create();
+	std::vector<int> labels = parseLabels();
+	std::vector<float> vectors = parseVectors();
+	updateKNN(labels, vectors, knn);
+	return knn;
+}
+
+void updateKNN(const std::vector<int> & labels, const std::vector<float> & vectors, cv::Ptr<cv::ml::KNearest> &knn)
+{
+	unsigned num_vectors = (unsigned)labels.size();
+	cv::Mat trainFeatures(num_vectors, VECTOR_DIM, CV_32F);
+	std::memcpy(trainFeatures.data, vectors.data(), num_vectors * VECTOR_DIM * sizeof(float));
+
+	cv::Mat trainlabels(1,num_vectors, CV_32S);
+	std::memcpy(trainlabels.data, labels.data(), num_vectors * sizeof(int));
+
+	knn->train(trainFeatures, cv::ml::ROW_SAMPLE, trainlabels);
 }

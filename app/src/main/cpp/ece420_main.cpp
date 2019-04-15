@@ -25,6 +25,16 @@ JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass);
 }
 
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_startAdd(JNIEnv *env, jclass);
+}
+
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass);
+}
+
 // Student Variables
 #define F_S 48000
 #define FRAME_SIZE 1024
@@ -32,7 +42,7 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass);
 
 #define BUFFER_SIZE 50
 
-#define VOICED_THRESHOLD 100000000000.0  // Find your own threshold
+#define VOICED_THRESHOLD 10000000000.0  // Find your own threshold
 int lastFreqDetected = -1;
 
 kiss_fft_cpx in[FRAME_SIZE];
@@ -43,6 +53,9 @@ int hist_buff[BUFFER_SIZE];
 unsigned hist_idx;
 
 cv::Ptr<cv::ml::KNearest> knn;
+
+std::vector<int> labels;
+std::vector<float> coeffs;
 
 std::vector<std::vector<double>> fbank;
 
@@ -116,24 +129,13 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
     knn = cv::ml::KNearest::create();
     knn->setDefaultK(1);
     knn->setIsClassifier(1);
-//    cv::Mat_<float> trainFeatures(NUM_VECTORS, VECTOR_DIM);
-//    for(unsigned x = 0; x < NUM_VECTORS; x++){
-//        for(unsigned y = 0; y < VECTOR_DIM; y++){
-//            trainFeatures << vectors[x][y];
-//        }
-//    }
 
     for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
         hist_buff[idx] = -1.0;
     }
     hist_idx = 0;
 
-    cv::Mat trainFeatures(NUM_VECTORS, VECTOR_DIM, CV_32F);
-    std::memcpy(trainFeatures.data, vectors, NUM_VECTORS * VECTOR_DIM * sizeof(float));
-
-    cv::Mat trainlabels(1,NUM_VECTORS, CV_32S);
-    std::memcpy(trainlabels.data, tags, NUM_VECTORS * sizeof(int));
-    knn->train(trainFeatures, cv::ml::ROW_SAMPLE, trainlabels);
+    knn = generateInitialKNN();
 
     LOGD("Finished training classifier");
 
@@ -142,4 +144,14 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
 
 	fbank = filter_bank(NUM_FILTERS, FRAME_SIZE, bin);
 	LOGD("Finished generating fbank");
+}
+
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_startAdd(JNIEnv *env, jclass) {
+    LOGD("Received call to startAdd");
+}
+
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass) {
+    LOGD("Received call to doneAdd");
 }

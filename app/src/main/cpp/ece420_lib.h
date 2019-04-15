@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <vector>
+#include <opencv2/ml/ml.hpp>
 
 #include "kiss_fft/kiss_fft.h"
 
@@ -39,6 +40,12 @@ std::vector<double> naiveDCT(const std::vector<double> &input);
 
 std::vector<float> naiveDCT(const std::vector<float> &input);
 
-double setLastFreqDetected();
+std::vector<int> parseLabels();
+
+std::vector<float> parseVectors();
+
+cv::Ptr<cv::ml::KNearest> generateInitialKNN();
+
+void updateKNN(const std::vector<int> &labels, const std::vector<float> &vectors, cv::Ptr<cv::ml::KNearest> & knn);
 
 #endif //ECE420_LIB_H
