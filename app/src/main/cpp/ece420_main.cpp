@@ -88,16 +88,30 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     }
 
     if(isVoiced(out, FRAME_SIZE, VOICED_THRESHOLD)){
-
         std::vector<float> mfcc = sampleToMFCC(out, fbank, FRAME_SIZE);
 
-        cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
-        std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
-        hist_buff[hist_idx++] = (int)knn->findNearest(inputFeature, 1, cv::noArray());
-        LOGD("Last speaker: %d %f", (int)knn->findNearest(inputFeature, 1, cv::noArray()), knn->findNearest(inputFeature, 1, cv::noArray()));
+        if(addingNewSpeaker){
+            coeffs.insert(coeffs.end(), mfcc.begin(), mfcc.end());
+            labels.push_back(nextSpeaker);
+            lastFreqDetected = nextSpeaker;
+            LOGD("Adding Speaker: %d", nextSpeaker);
+            gettimeofday(&end, NULL);
+            LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+            return;
+        } else {
+            cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
+            std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
+            hist_buff[hist_idx++] = (int) knn->findNearest(inputFeature, 1, cv::noArray());
+            LOGD("Last speaker: %d %f", (int) knn->findNearest(inputFeature, 1, cv::noArray()),
+                 knn->findNearest(inputFeature, 1, cv::noArray()));
+        }
     } else {
 //        lastFreqDetected = -1;
-        hist_buff[hist_idx++] = -1;
+        if(addingNewSpeaker){
+            lastFreqDetected = -1;
+            return;
+        }
+        else hist_buff[hist_idx++] = -1;
     }
 
     hist_idx %= BUFFER_SIZE;
@@ -108,10 +122,10 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     }
     int max_speaker = -1;
     int count = dict[-1];
-    for(int x = 0; x < 3; x++){
-        if(dict[x] > count){
-            max_speaker = x;
-            count = dict[x];
+    for(auto x = dict.begin(); x != dict.end(); x++){
+        if(x->second > count){
+            count = x->second;
+            max_speaker = x->first;
         }
     }
     lastFreqDetected = max_speaker;
@@ -131,7 +145,7 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
     LOGD("Received Call to Init");
     knn = cv::ml::KNearest::create();
     knn->setDefaultK(1);
-    knn->setIsClassifier(1b);
+    knn->setIsClassifier(1);
 
     for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
         hist_buff[idx] = -1;
@@ -156,14 +170,14 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
 JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_startAdd(JNIEnv *env, jclass) {
     LOGD("Received call to startAdd");
-    addingNewSpeaker = 1b;
+    addingNewSpeaker = 1;
 }
 
 JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass) {
     LOGD("Received call to doneAdd");
     nextSpeaker++;
-    addingNewSpeaker = 0b;
+    addingNewSpeaker = 0;
     for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
         hist_buff[idx] = -1;
     }
