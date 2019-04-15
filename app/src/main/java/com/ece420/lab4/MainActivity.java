@@ -46,12 +46,14 @@ public class MainActivity extends Activity
 
     // UI Variables
     Button   controlButton;
+    Button   addButton;
     TextView statusView;
     static TextView freq_view;
     String  nativeSampleRate;
     String  nativeSampleBufSize;
     boolean supportRecording;
     Boolean isPlaying = false;
+    boolean addSpeaker = false;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 1024;
@@ -65,6 +67,7 @@ public class MainActivity extends Activity
 
         // Google NDK Stuff
         controlButton = (Button)findViewById((R.id.capture_control_button));
+        addButton = (Button)findViewById(R.id.addspeaker);
         statusView = (TextView)findViewById(R.id.statusView);
         queryNativeAudioParameters();
         // initialize native audio system
@@ -151,6 +154,17 @@ public class MainActivity extends Activity
             return;
         }
         startEcho();
+    }
+
+    public void onAddNewSpeakerClick(View view){
+        addSpeaker = !addSpeaker;
+        if(addSpeaker){
+            addButton.setText("Done Adding");
+            startAdd();
+        } else {
+            addButton.setText("Add New Speaker");
+            doneAdd();
+        }
     }
 
     public void getLowLatencyParameters(View view) {
@@ -287,6 +301,9 @@ public class MainActivity extends Activity
     public static native void stopPlay();
 
     public static native int getFreqUpdate();
+
+    public static native void startAdd();
+    public static native void doneAdd();
 
     public static native void init();
 }

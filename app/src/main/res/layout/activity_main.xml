@@ -41,5 +41,12 @@
         android:textAppearance="@android:style/TextAppearance.Material.Headline"
         android:textSize="36sp" />
 
+    <Button
+        android:id="@+id/addspeaker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onAddNewSpeakerClick"
+        android:text="Add New Speaker" />
+
 </RelativeLayout>
 
