@@ -12,6 +12,8 @@
 
 #include "kiss_fft/kiss_fft.h"
 
+#define VECTOR_DIM 20
+
 double getHanningCoef(int N, int idx);
 int findMaxArrayIdx(double *array, int minIdx, int maxIdx);
 int findClosestIdxInArray(double *array, double value, int minIdx, int maxIdx);
@@ -40,11 +42,11 @@ std::vector<double> naiveDCT(const std::vector<double> &input);
 
 std::vector<float> naiveDCT(const std::vector<float> &input);
 
-std::vector<int> parseLabels();
-
-std::vector<float> parseVectors();
-
-cv::Ptr<cv::ml::KNearest> generateInitialKNN();
+//std::vector<int> parseLabels();
+//
+//std::vector<float> parseVectors();
+//
+//cv::Ptr<cv::ml::KNearest> generateInitialKNN();
 
 void updateKNN(const std::vector<int> &labels, const std::vector<float> &vectors, cv::Ptr<cv::ml::KNearest> & knn);
 

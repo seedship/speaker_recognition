@@ -31,6 +31,15 @@
         android:layout_alignParentBottom="true"/>
 
     <TextView
+        android:id="@+id/speakerView"
+        android:layout_width="149dp"
+        android:layout_height="314dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="0dp"
+        android:text="Registered Speakers:" />
+
+    <TextView
         android:id="@+id/textFrequency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -47,6 +56,15 @@
         android:layout_height="wrap_content"
         android:onClick="onAddNewSpeakerClick"
         android:text="Add New Speaker" />
+
+    <EditText
+        android:id="@+id/nameInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:layout_alignParentRight="true"/>
 
 </RelativeLayout>
 

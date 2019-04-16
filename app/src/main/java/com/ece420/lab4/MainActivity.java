@@ -34,11 +34,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.HashMap;
 
 
 public class MainActivity extends Activity
@@ -48,6 +50,8 @@ public class MainActivity extends Activity
     Button   controlButton;
     Button   addButton;
     TextView statusView;
+    TextView speakerView;
+    EditText nameInput;
     static TextView freq_view;
     String  nativeSampleRate;
     String  nativeSampleBufSize;
@@ -57,6 +61,8 @@ public class MainActivity extends Activity
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 1024;
+
+    HashMap<Integer, String> nameMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +75,8 @@ public class MainActivity extends Activity
         controlButton = (Button)findViewById((R.id.capture_control_button));
         addButton = (Button)findViewById(R.id.addspeaker);
         statusView = (TextView)findViewById(R.id.statusView);
+        nameInput = (EditText)findViewById(R.id.nameInput);
+        speakerView = (TextView)findViewById(R.id.speakerView);
         queryNativeAudioParameters();
         // initialize native audio system
         updateNativeAudioUI();
@@ -77,6 +85,8 @@ public class MainActivity extends Activity
         }
 
         init();
+
+        nameMap = new HashMap<>();
 
         // Setup UI
         freq_view = (TextView)findViewById(R.id.textFrequency);
@@ -159,7 +169,18 @@ public class MainActivity extends Activity
     public void onAddNewSpeakerClick(View view){
         addSpeaker = !addSpeaker;
         if(addSpeaker){
+            String name = nameInput.getText().toString();
+            if(nameMap.containsValue(name)){
+                //TODO add popup window
+                addSpeaker = !addSpeaker;
+                return;
+            }
             addButton.setText("Done Adding");
+            String speakers = speakerView.getText().toString();
+            speakers += "\n";
+            speakers += name;
+            speakerView.setText(speakers);
+            nameMap.put(getCurrentSpeaker(), name);
             startAdd();
         } else {
             addButton.setText("Add New Speaker");
@@ -272,9 +293,14 @@ public class MainActivity extends Activity
 
         protected void onProgressUpdate(Integer... newFreq) {
             if (newFreq[0] >= 0) {
-                freq_view.setText("Speaker #" + Integer.toString(newFreq[0].intValue()));
-            } else {
+                String name = nameMap.get(newFreq[0].intValue());
+                freq_view.setText(name);
+            } else if(newFreq[0] == -1) {
                 freq_view.setText("Unvoiced");
+            } else if(newFreq[0] == -2) {
+                freq_view.setText("No Registered Speakers");
+            } else {
+                freq_view.setText("Unknown code");
             }
         }
     }
@@ -306,4 +332,6 @@ public class MainActivity extends Activity
     public static native void doneAdd();
 
     public static native void init();
+
+    public static native int getCurrentSpeaker();
 }

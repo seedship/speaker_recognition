@@ -7,7 +7,7 @@
 #include "ece420_lib.h"
 #include <opencv2/ml/ml.hpp>
 #include "NaiveDct.hpp"
-#include "codebook2.h"
+//#include "codebook2.h"
 
 // https://en.wikipedia.org/wiki/Hann_function
 double getHanningCoef(int N, int idx)
@@ -278,24 +278,24 @@ std::vector<float> naiveDCT(const std::vector<float> &input)
     return ans;
 }
 
-std::vector<int> parseLabels()
-{
-	return std::vector<int>(&tags[0], &tags[NUM_VECTORS]);
-}
-
-std::vector<float> parseVectors()
-{
-	return std::vector<float>(&vectors[0], &vectors[NUM_VECTORS*VECTOR_DIM]);
-}
-
-cv::Ptr<cv::ml::KNearest> generateInitialKNN()
-{
-	auto knn = cv::ml::KNearest::create();
-	std::vector<int> labels = parseLabels();
-	std::vector<float> vectors = parseVectors();
-	updateKNN(labels, vectors, knn);
-	return knn;
-}
+//std::vector<int> parseLabels()
+//{
+//	return std::vector<int>(&tags[0], &tags[NUM_VECTORS]);
+//}
+//
+//std::vector<float> parseVectors()
+//{
+//	return std::vector<float>(&vectors[0], &vectors[NUM_VECTORS*VECTOR_DIM]);
+//}
+//
+//cv::Ptr<cv::ml::KNearest> generateInitialKNN()
+//{
+//	auto knn = cv::ml::KNearest::create();
+//	std::vector<int> labels = parseLabels();
+//	std::vector<float> vectors = parseVectors();
+//	updateKNN(labels, vectors, knn);
+//	return knn;
+//}
 
 void updateKNN(const std::vector<int> & labels, const std::vector<float> & vectors, cv::Ptr<cv::ml::KNearest> &knn)
 {

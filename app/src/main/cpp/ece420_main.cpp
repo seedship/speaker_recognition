@@ -10,9 +10,7 @@
 
 #include <unordered_map>
 
-#include "codebook2.h"
 #include <opencv2/ml/ml.hpp>
-#include "FastDctFft.hpp"
 
 // JNI Function
 extern "C" {
@@ -33,6 +31,11 @@ Java_com_ece420_lab4_MainActivity_startAdd(JNIEnv *env, jclass);
 extern "C" {
 JNIEXPORT void JNICALL
 Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass);
+}
+
+extern "C" {
+JNIEXPORT int JNICALL
+Java_com_ece420_lab4_MainActivity_getCurrentSpeaker(JNIEnv *env, jclass);
 }
 
 // Student Variables
@@ -68,6 +71,8 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     struct timeval end;
     gettimeofday(&start, NULL);
 
+    bool currentSampleUnvoiced = false;
+
     // Data is encoded in signed PCM-16, little-endian, mono
     //float bufferIn[FRAME_SIZE];
     for (int i = 0; i < FRAME_SIZE; i++) {
@@ -98,20 +103,25 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
             gettimeofday(&end, NULL);
             LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
             return;
-        } else {
+        } else if(knn->isTrained()) {
             cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
             std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
             hist_buff[hist_idx++] = (int) knn->findNearest(inputFeature, 1, cv::noArray());
             LOGD("Last speaker: %d %f", (int) knn->findNearest(inputFeature, 1, cv::noArray()),
                  knn->findNearest(inputFeature, 1, cv::noArray()));
+        } else {
+            lastFreqDetected = -2;
+            return;
         }
     } else {
-//        lastFreqDetected = -1;
         if(addingNewSpeaker){
             lastFreqDetected = -1;
             return;
         }
-        else hist_buff[hist_idx++] = -1;
+        else {
+            hist_buff[hist_idx++] = -1;
+            currentSampleUnvoiced = true;
+        }
     }
 
     hist_idx %= BUFFER_SIZE;
@@ -128,7 +138,10 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
             max_speaker = x->first;
         }
     }
-    lastFreqDetected = max_speaker;
+    if(currentSampleUnvoiced)
+        lastFreqDetected = -1;
+    else
+        lastFreqDetected = max_speaker;
 
 
     gettimeofday(&end, NULL);
@@ -152,11 +165,13 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
     }
     hist_idx = 0;
 
-    labels = parseLabels();
-    coeffs = parseVectors();
-    updateKNN(labels, coeffs, knn);
 
-    nextSpeaker = NEXTSPEAKER;
+
+//    labels = parseLabels();
+//    coeffs = parseVectors();
+//    updateKNN(labels, coeffs, knn);
+
+    nextSpeaker = 0;
 
     LOGD("Finished training classifier");
 
@@ -183,4 +198,9 @@ Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass) {
     }
     hist_idx = 0;
     updateKNN(labels, coeffs, knn);
+}
+
+JNIEXPORT int JNICALL
+Java_com_ece420_lab4_MainActivity_getCurrentSpeaker(JNIEnv *env, jclass) {
+    return nextSpeaker;
 }
