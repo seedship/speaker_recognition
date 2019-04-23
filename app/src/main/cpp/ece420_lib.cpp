@@ -7,7 +7,7 @@
 #include "ece420_lib.h"
 #include <opencv2/ml/ml.hpp>
 #include "NaiveDct.hpp"
-#include "android_debug.h"
+//#include "android_debug.h"
 
 // https://en.wikipedia.org/wiki/Hann_function
 double getHanningCoef(int N, int idx)

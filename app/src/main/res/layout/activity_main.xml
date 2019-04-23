@@ -66,5 +66,14 @@
         android:text="Name"
         android:layout_alignParentRight="true"/>
 
+    <Button
+        android:id="@+id/recordBackgroundButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:onClick="onBackgroundNoiseButtonClick"
+        android:layout_above="@+id/capture_control_button"
+        android:text="Record Background Noise" />
+
 </RelativeLayout>
 

@@ -34,6 +34,16 @@ Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass);
 }
 
 extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_startAddBackground(JNIEnv *env, jclass);
+}
+
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_doneAddBackground(JNIEnv *env, jclass);
+}
+
+extern "C" {
 JNIEXPORT int JNICALL
 Java_com_ece420_lab4_MainActivity_getCurrentSpeaker(JNIEnv *env, jclass);
 }
@@ -47,6 +57,12 @@ Java_com_ece420_lab4_MainActivity_getCurrentSpeaker(JNIEnv *env, jclass);
 
 #define VOICED_THRESHOLD 10000000000  // Find your own threshold
 #define RECOGNIZED_THRESHOLD 10
+
+#define SAMPLE_UNVOICED (-1)
+#define NO_SPEAKERS (-2)
+#define UNRECOGNIZED_SPEAKER (-3)
+#define BACKGROUND (-4)
+
 int lastFreqDetected = -1;
 
 kiss_fft_cpx in[FRAME_SIZE];
@@ -65,14 +81,9 @@ std::vector<std::vector<double>> fbank;
 
 unsigned nextSpeaker;
 bool addingNewSpeaker;
+bool recordingBackground;
 
 void ece420ProcessFrame(sample_buf *dataBuf) {
-    // Keep in mind, we only have 20ms to process each buffer!
-    struct timeval start;
-    struct timeval end;
-    gettimeofday(&start, NULL);
-
-    bool currentSampleUnvoiced = false;
 
     // Data is encoded in signed PCM-16, little-endian, mono
     //float bufferIn[FRAME_SIZE];
@@ -96,40 +107,47 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     if(isVoiced(out, FRAME_SIZE, VOICED_THRESHOLD)){
         std::vector<float> mfcc = sampleToMFCC(out, fbank, FRAME_SIZE);
 
-        if(addingNewSpeaker){
+        if(recordingBackground){
             coeffs.insert(coeffs.end(), mfcc.begin(), mfcc.end());
-            labels.push_back(nextSpeaker);
-            lastFreqDetected = nextSpeaker;
-            LOGD("Adding Speaker: %d", nextSpeaker);
-            gettimeofday(&end, NULL);
-//            LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+            labels.push_back(BACKGROUND);
+            lastFreqDetected = BACKGROUND;
             return;
-        } else if(knn->isTrained()) {
-            cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
-            cv::Mat_<float> dist(1, 1, CV_32F);
-            std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
-            int classification = (int) knn->findNearest(inputFeature, 1, cv::noArray(), cv::noArray(), dist);
-            LOGD("Distance: %f", dist[0][0]);
-            if(dist[0][0] < RECOGNIZED_THRESHOLD)
+        }
+
+        if(!knn->isTrained()){
+            lastFreqDetected = NO_SPEAKERS;
+            return;
+        }
+
+        cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
+        cv::Mat_<float> dist(1, 1, CV_32F);
+        std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
+        int classification = (int) knn->findNearest(inputFeature, 1, cv::noArray(), cv::noArray(), dist);
+        float classification_dist = dist[0][0];
+
+        if(addingNewSpeaker){
+            if(classification == BACKGROUND && classification_dist < RECOGNIZED_THRESHOLD) {
+                lastFreqDetected = BACKGROUND;
+            } else {
+                coeffs.insert(coeffs.end(), mfcc.begin(), mfcc.end());
+                labels.push_back(nextSpeaker);
+                lastFreqDetected = nextSpeaker;
+            }
+            return;
+        } else {
+            if(classification_dist < RECOGNIZED_THRESHOLD)
                 hist_buff[hist_idx++] = classification;
             else {
-                hist_buff[hist_idx++] = -3;
-//                lastFreqDetected = -3;
-//                return;
+                hist_buff[hist_idx++] = UNRECOGNIZED_SPEAKER;
             }
-        } else {
-            lastFreqDetected = -2;
-            return;
         }
     } else {
         if(addingNewSpeaker){
-            hist_buff[hist_idx++] = -1;
-//            lastFreqDetected = -1;
-//            return;
+            lastFreqDetected = SAMPLE_UNVOICED;
+            return;
         }
         else {
-            hist_buff[hist_idx++] = -1;
-            currentSampleUnvoiced = true;
+            hist_buff[hist_idx++] = SAMPLE_UNVOICED;
         }
     }
 
@@ -139,22 +157,15 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
     for(unsigned x = 0; x < BUFFER_SIZE; x++){
         dict[hist_buff[x]]++;
     }
-    int max_speaker = -1;
-    int count = dict[-1];
+    int max_speaker = SAMPLE_UNVOICED;
+    int count = dict[SAMPLE_UNVOICED];
     for(auto x = dict.begin(); x != dict.end(); x++){
         if(x->second > count){
             count = x->second;
             max_speaker = x->first;
         }
     }
-    if(currentSampleUnvoiced)
-        lastFreqDetected = -1;
-    else
-        lastFreqDetected = max_speaker;
-
-
-    gettimeofday(&end, NULL);
-//    LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+    lastFreqDetected = max_speaker;
 }
 
 JNIEXPORT int JNICALL
@@ -175,12 +186,9 @@ Java_com_ece420_lab4_MainActivity_init(JNIEnv *env, jclass) {
     hist_idx = 0;
 
 
-
-//    labels = parseLabels();
-//    coeffs = parseVectors();
-//    updateKNN(labels, coeffs, knn);
-
     nextSpeaker = 0;
+    addingNewSpeaker = 0;
+    recordingBackground = 0;
 
     LOGD("Finished training classifier");
 
@@ -203,9 +211,22 @@ Java_com_ece420_lab4_MainActivity_doneAdd(JNIEnv *env, jclass) {
     nextSpeaker++;
     addingNewSpeaker = 0;
     for(unsigned idx = 0; idx < BUFFER_SIZE; idx++){
-        hist_buff[idx] = -1;
+        hist_buff[idx] = BACKGROUND;
     }
     hist_idx = 0;
+    updateKNN(labels, coeffs, knn);
+}
+
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_startAddBackground(JNIEnv *env, jclass) {
+    LOGD("Received call to startAddBackground");
+    recordingBackground = 1;
+}
+
+JNIEXPORT void JNICALL
+Java_com_ece420_lab4_MainActivity_doneAddBackground(JNIEnv *env, jclass) {
+    LOGD("Received call to doneAddBackground");
+    recordingBackground = 0;
     updateKNN(labels, coeffs, knn);
 }
 

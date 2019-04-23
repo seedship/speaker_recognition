@@ -49,6 +49,7 @@ public class MainActivity extends Activity
     // UI Variables
     Button   controlButton;
     Button   addButton;
+    Button   backgroundNoiseButton;
     TextView statusView;
     TextView speakerView;
     EditText nameInput;
@@ -58,6 +59,7 @@ public class MainActivity extends Activity
     boolean supportRecording;
     Boolean isPlaying = false;
     boolean addSpeaker = false;
+    boolean recordingBackground = false;
     // Static Values
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 1024;
@@ -74,6 +76,7 @@ public class MainActivity extends Activity
         // Google NDK Stuff
         controlButton = (Button)findViewById((R.id.capture_control_button));
         addButton = (Button)findViewById(R.id.addspeaker);
+        backgroundNoiseButton = (Button)findViewById(R.id.recordBackgroundButton);
         statusView = (TextView)findViewById(R.id.statusView);
         nameInput = (EditText)findViewById(R.id.nameInput);
         speakerView = (TextView)findViewById(R.id.speakerView);
@@ -185,6 +188,17 @@ public class MainActivity extends Activity
         } else {
             addButton.setText("Add New Speaker");
             doneAdd();
+        }
+    }
+
+    public void onBackgroundNoiseButtonClick(View view){
+        recordingBackground = !recordingBackground;
+        if(recordingBackground) { //done
+            backgroundNoiseButton.setText("Done Recording Background Noise");
+            startAddBackground();
+        } else {
+            backgroundNoiseButton.setText("Record More Background Noise");
+            doneAddBackground();
         }
     }
 
@@ -301,6 +315,8 @@ public class MainActivity extends Activity
                 freq_view.setText("No Registered Speakers");
             } else if(newFreq[0] == -3) {
                 freq_view.setText("Unrecognized Speaker");
+            }  else if(newFreq[0] == -4) {
+                freq_view.setText("Background Noise");
             } else {
                 freq_view.setText("Unknown code");
             }
@@ -332,6 +348,9 @@ public class MainActivity extends Activity
 
     public static native void startAdd();
     public static native void doneAdd();
+
+    public static native void startAddBackground();
+    public static native void doneAddBackground();
 
     public static native void init();
 
