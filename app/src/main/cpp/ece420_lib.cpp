@@ -7,7 +7,7 @@
 #include "ece420_lib.h"
 #include <opencv2/ml/ml.hpp>
 #include "NaiveDct.hpp"
-//#include "codebook2.h"
+#include "android_debug.h"
 
 // https://en.wikipedia.org/wiki/Hann_function
 double getHanningCoef(int N, int idx)
@@ -123,7 +123,7 @@ double calculateEnergySquared(const kiss_fft_cpx *data_squared, unsigned length)
 bool isVoiced(const kiss_fft_cpx *data_squared, unsigned length, double threshold)
 {
 	double total = calculateEnergySquared(data_squared, length);
-	//    LOGD("%f\t%f\t%u", total, threshold, total > threshold);
+//	LOGD("isVoiced: %f\t%f\t%u", total, threshold, total > threshold);
 	return total > threshold;
 }
 

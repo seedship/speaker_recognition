@@ -45,7 +45,8 @@ Java_com_ece420_lab4_MainActivity_getCurrentSpeaker(JNIEnv *env, jclass);
 
 #define BUFFER_SIZE 50
 
-#define VOICED_THRESHOLD 10000000000.0  // Find your own threshold
+#define VOICED_THRESHOLD 10000000000  // Find your own threshold
+#define RECOGNIZED_THRESHOLD 10
 int lastFreqDetected = -1;
 
 kiss_fft_cpx in[FRAME_SIZE];
@@ -101,22 +102,30 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
             lastFreqDetected = nextSpeaker;
             LOGD("Adding Speaker: %d", nextSpeaker);
             gettimeofday(&end, NULL);
-            LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+//            LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
             return;
         } else if(knn->isTrained()) {
             cv::Mat_<float> inputFeature(1, VECTOR_DIM, CV_32F);
+            cv::Mat_<float> dist(1, 1, CV_32F);
             std::memcpy(inputFeature.data, mfcc.data(), VECTOR_DIM * sizeof(float));
-            hist_buff[hist_idx++] = (int) knn->findNearest(inputFeature, 1, cv::noArray());
-            LOGD("Last speaker: %d %f", (int) knn->findNearest(inputFeature, 1, cv::noArray()),
-                 knn->findNearest(inputFeature, 1, cv::noArray()));
+            int classification = (int) knn->findNearest(inputFeature, 1, cv::noArray(), cv::noArray(), dist);
+            LOGD("Distance: %f", dist[0][0]);
+            if(dist[0][0] < RECOGNIZED_THRESHOLD)
+                hist_buff[hist_idx++] = classification;
+            else {
+                hist_buff[hist_idx++] = -3;
+//                lastFreqDetected = -3;
+//                return;
+            }
         } else {
             lastFreqDetected = -2;
             return;
         }
     } else {
         if(addingNewSpeaker){
-            lastFreqDetected = -1;
-            return;
+            hist_buff[hist_idx++] = -1;
+//            lastFreqDetected = -1;
+//            return;
         }
         else {
             hist_buff[hist_idx++] = -1;
@@ -145,7 +154,7 @@ void ece420ProcessFrame(sample_buf *dataBuf) {
 
 
     gettimeofday(&end, NULL);
-    LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
+//    LOGD("Time delay: %ld us",  ((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)));
 }
 
 JNIEXPORT int JNICALL

@@ -299,6 +299,8 @@ public class MainActivity extends Activity
                 freq_view.setText("Unvoiced");
             } else if(newFreq[0] == -2) {
                 freq_view.setText("No Registered Speakers");
+            } else if(newFreq[0] == -3) {
+                freq_view.setText("Unrecognized Speaker");
             } else {
                 freq_view.setText("Unknown code");
             }
