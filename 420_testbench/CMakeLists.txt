@@ -14,10 +14,7 @@ include_directories( ${OpenCV_INCLUDE_DIRS})
 add_executable(
 	${PROJECT_NAME} "main.cpp"
 	"ece420_lib.cpp"
-	"kiss_fft/kiss_fft.c"
-	"FftRealPair.cpp"
-	"FastDctFft.cpp"
-	"NaiveDct.cpp")
+	"kiss_fft/kiss_fft.c")
 
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} )
