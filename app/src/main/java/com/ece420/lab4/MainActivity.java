@@ -64,6 +64,7 @@ public class MainActivity extends Activity
     private static final int AUDIO_ECHO_REQUEST = 0;
     private static final int FRAME_SIZE = 1024;
 
+	//Map to convert integer tags to human readable names
     HashMap<Integer, String> nameMap;
 
     @Override
@@ -87,6 +88,7 @@ public class MainActivity extends Activity
             createSLEngine(Integer.parseInt(nativeSampleRate), FRAME_SIZE);
         }
 
+		//Setup C++ backend
         init();
 
         nameMap = new HashMap<>();
@@ -172,32 +174,38 @@ public class MainActivity extends Activity
     public void onAddNewSpeakerClick(View view){
         addSpeaker = !addSpeaker;
         if(addSpeaker){
+        	//Begin adding speaker
             String name = nameInput.getText().toString();
             if(nameMap.containsValue(name)){
-                //TODO add popup window
+                //If speaker with given name already exists, don't add
                 addSpeaker = !addSpeaker;
                 return;
             }
             addButton.setText("Done Adding");
+            //Otherwise, add speaker to int -> speaker dictionary
             String speakers = speakerView.getText().toString();
             speakers += "\n";
             speakers += name;
             speakerView.setText(speakers);
             nameMap.put(getCurrentSpeaker(), name);
+            //Set flags in C++ backend
             startAdd();
         } else {
             addButton.setText("Add New Speaker");
+            //Set flags in C++ backend
             doneAdd();
         }
     }
 
     public void onBackgroundNoiseButtonClick(View view){
         recordingBackground = !recordingBackground;
-        if(recordingBackground) { //done
+        if(recordingBackground) {
             backgroundNoiseButton.setText("Done Recording Background Noise");
+            //Set flags in C++ backend
             startAddBackground();
         } else {
             backgroundNoiseButton.setText("Record More Background Noise");
+            //Set flags in C++ backend
             doneAddBackground();
         }
     }
@@ -307,9 +315,10 @@ public class MainActivity extends Activity
 
         protected void onProgressUpdate(Integer... newFreq) {
             if (newFreq[0] >= 0) {
+            	//Positive values are speakers, use the map to find the correct name
                 String name = nameMap.get(newFreq[0].intValue());
                 freq_view.setText(name);
-            } else if(newFreq[0] == -1) {
+            } else if(newFreq[0] == -1) { //Negative values are nonspeakers
                 freq_view.setText("Unvoiced");
             } else if(newFreq[0] == -2) {
                 freq_view.setText("No Registered Speakers");
