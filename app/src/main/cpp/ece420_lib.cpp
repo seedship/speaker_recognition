@@ -1,62 +1,7 @@
-//
-// Created by daran on 1/12/2017 to be used in ECE420 Sp17 for the first time.
-// Modified by dwang49 on 1/1/2018 to adapt to Android 7.0 and Shield Tablet updates.
-//
 
 #include <cmath>
 #include "ece420_lib.h"
 #include <opencv2/ml/ml.hpp>
-#include "NaiveDct.hpp"
-//#include "android_debug.h"
-
-// https://en.wikipedia.org/wiki/Hann_function
-double getHanningCoef(int N, int idx)
-{
-	return (double) (0.5 * (1.0 - cos(2.0 * M_PI * idx / (N - 1))));
-}
-
-int findMaxArrayIdx(double *array, int minIdx, int maxIdx)
-{
-	int ret_idx = minIdx;
-
-	for (int i = minIdx; i < maxIdx; i++) {
-		if (array[i] > array[ret_idx]) {
-			ret_idx = i;
-		}
-	}
-	return ret_idx;
-}
-
-int findClosestIdxInArray(double *array, double value, int minIdx, int maxIdx)
-{
-	int retIdx = minIdx;
-	double bestResid = abs(array[retIdx] - value);
-
-	for (int i = minIdx; i < maxIdx; i++) {
-		if (abs(array[i] - value) < bestResid) {
-			bestResid = abs(array[i] - value);
-			retIdx = i;
-		}
-	}
-
-	return retIdx;
-}
-
-// TODO: These should really be templatized
-int findClosestInVector(std::vector<int> vec, double value, int minIdx, int maxIdx)
-{
-	int retIdx = minIdx;
-	double bestResid = abs(vec[retIdx] - value);
-
-	for (int i = minIdx; i < maxIdx; i++) {
-		if (abs(vec[i] - value) < bestResid) {
-			bestResid = abs(vec[i] - value);
-			retIdx = i;
-		}
-	}
-
-	return retIdx;
-}
 
 double HzToMel(double freq)
 {
@@ -99,8 +44,6 @@ std::vector<double> generateMelPoints(unsigned num_filters, unsigned nfft, unsig
 	return ans;
 }
 
-
-
 std::vector<unsigned> generateBinPoints(const std::vector<double> &mel_points, unsigned nfft, unsigned fs)
 {
 	std::vector<unsigned> ans(mel_points.size());
@@ -123,7 +66,6 @@ double calculateEnergySquared(const kiss_fft_cpx *data_squared, unsigned length)
 bool isVoiced(const kiss_fft_cpx *data_squared, unsigned length, double threshold)
 {
 	double total = calculateEnergySquared(data_squared, length);
-//	LOGD("isVoiced: %f\t%f\t%u", total, threshold, total > threshold);
 	return total > threshold;
 }
 
@@ -161,32 +103,14 @@ std::vector<double> sampleToMFCC(const std::vector<double> &inputData, const std
 		data[x].i = data[x].i;
 	}
 
-//	for(unsigned x = 0; x < framesize; x++){
-//		std::printf("%.8e\t%0.8ej\n", data[x].r, data[x].i);
-//	}
-
-//	return std::vector<double>();
-
 	for(unsigned x = 0; x < framesize; x++){
 		data[x].r = data[x].r * data[x].r + data[x].i * data[x].i;
 		data[x].i = 0;
 	}
 
-//	for(unsigned x = 0; x < framesize; x++){
-//		std::printf("%.8e ", data[x].r);
-//	}
-//	std::cout<<"\n";
-//	return std::vector<double>();
-
 	for(unsigned x = 0; x < framesize; x++){
 		data[x].r /= framesize;
 	}
-
-//	for(unsigned x = 0; x < framesize; x++){
-//		std::printf("%.8e ", data[x].r);
-//	}
-//	std::cout<<"\n";
-//	return std::vector<double>();
 
 	std::vector<double> mfcc(20);
 	for(unsigned x = 0; x < fbank.size(); x++){
@@ -197,14 +121,7 @@ std::vector<double> sampleToMFCC(const std::vector<double> &inputData, const std
 		mfcc[x] = log(total + 0.001f);
 	}
 
-//	for(unsigned x = 0; x < 20; x++){
-//		std::printf("%f ", mfcc[x]);
-//	}
-//	std::cout<<"\n";
-//	return std::vector<double>();
-
 	mfcc = naiveDCT(mfcc);
-//	NaiveDct::transform(mfcc);
 	for(unsigned x = 0; x < 20; x++){
 		if(!x)
 			mfcc[x] = mfcc[x] * sqrt(1.0/(4*20));
@@ -212,12 +129,6 @@ std::vector<double> sampleToMFCC(const std::vector<double> &inputData, const std
 			mfcc[x] = mfcc[x] * sqrt(1.0/(2*20));
 		}
 	}
-
-//	for(unsigned x = 0; x < 12; x++){
-//		std::printf("%.8e ", mfcc[x]);
-//	}
-//	std::cout<<"\n";
-	//	return std::vector<double>();
 
 	return mfcc;
 }
@@ -277,25 +188,6 @@ std::vector<float> naiveDCT(const std::vector<float> &input)
     }
     return ans;
 }
-
-//std::vector<int> parseLabels()
-//{
-//	return std::vector<int>(&tags[0], &tags[NUM_VECTORS]);
-//}
-//
-//std::vector<float> parseVectors()
-//{
-//	return std::vector<float>(&vectors[0], &vectors[NUM_VECTORS*VECTOR_DIM]);
-//}
-//
-//cv::Ptr<cv::ml::KNearest> generateInitialKNN()
-//{
-//	auto knn = cv::ml::KNearest::create();
-//	std::vector<int> labels = parseLabels();
-//	std::vector<float> vectors = parseVectors();
-//	updateKNN(labels, vectors, knn);
-//	return knn;
-//}
 
 void updateKNN(const std::vector<int> & labels, const std::vector<float> & vectors, cv::Ptr<cv::ml::KNearest> &knn)
 {

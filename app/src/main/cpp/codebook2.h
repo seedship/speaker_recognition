@@ -6,6 +6,11 @@
 
 #define NEXTSPEAKER 3
 
+/** Initial predefined codebook used for milestone 1 only. Speaker 0 is Hiraal,
+  * speaker 1 is Francis, and speaker 2 is Richard. The tags vector is the labels
+  * vector, and the vectors vector is the data vector.
+  */
+
 static const int tags[NUM_VECTORS] = {
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
