@@ -27,8 +27,6 @@ add_library(echo SHARED
         kiss_fft/kiss_fft.c
         ece420_lib.cpp
         ece420_main.cpp
-        FftRealPair.cpp
-        FastDctFft.cpp
         )
 
 
